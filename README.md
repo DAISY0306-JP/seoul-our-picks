@@ -41,6 +41,15 @@ index.html ─ ログイン ──▶ Auth（3人だけ・新規登録は止め�
 **Settings → Pages → Build and deployment** で、Source を「Deploy from a branch」、Branch を `main` と `/ (root)` にします。
 数分すると `https://<ユーザー名>.github.io/<リポジトリ名>/` で開けるようになります。
 
+## QRでログインしてもらう
+
+`https://<ユーザー名>.github.io/<リポジトリ名>/qr.html` を開き、3人のIDと合言葉を入れると、1人ずつログイン用のQRが出ます。
+
+- QRの中身は `index.html#i=<ID>&k=<合言葉>` です。`#` から後ろはGitHubに送られません。ログイン画面は読み取った直後に、アドレスバーと履歴からこの部分を消します。
+- `qr.html` は通信を一切しない設定（CSP の `connect-src 'none'`）で、入力も保存しません。別のアプリに切り替えたり画面を消したりすると、QRも消えます。
+- **QRは鍵そのもの**です。会ったときに画面を見せて読み取ってもらい、スクリーンショットや画像の送信はしないでください。
+- 1回ログインすれば、そのブラウザではログインしたままになります。iPhoneでホーム画面に追加した場合は、そこでもう一度読み取ってください。
+
 ## 旅程を更新するとき
 
 Supabase の **Storage → trip** で、`app.html` を新しいものに置きかえます。GitHub 側の変更はいりません。次にアプリを開いたときに反映されます。
@@ -54,6 +63,7 @@ Supabase の **Storage → trip** で、`app.html` を新しいものに置き�
 | ファイル | 中身 |
 |---|---|
 | `index.html` | ログイン画面と、Supabase とのやりとり |
+| `qr.html` | ログイン用QRを、ブラウザの中だけで作るページ |
 | `supabase/setup.sql` | テーブル・RLS・ストレージの設定 |
 | `supabase/members.sql` | 3人をメンバーに登録する SQL のひな形 |
 
