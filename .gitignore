@@ -1,0 +1,5 @@
+# The trip itself never goes into this repository.
+app.html
+*.private.*
+private/
+.DS_Store

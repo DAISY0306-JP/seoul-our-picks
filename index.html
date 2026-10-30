@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#F2F4F6">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://__SUPABASE_HOST__ wss://__SUPABASE_HOST__; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>OUR PICKS</title>
+<!--
+  This page is only a lock screen. The trip itself (schedule, places, hotel) is NOT in this repository:
+  it is stored as app.html in a private Supabase Storage bucket and is only downloaded after one of the
+  three members logs in with their ID and the shared passphrase. Row level security on Supabase decides
+  who can read it; the anon key below is meant to be public.
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#F2F4F6;--surface:#FFFFFF;--ink:#0F1419;--muted:#4A545E;--faint:#77818B;--rule:#DCE2E7;--accent:#E04532;--on-ink:#FFFFFF;--ink-btn:#0F1419;--warn:#B3261E;
+  --d27:#957C3C;--d28:#00994A;--d29:#0090C4;--d30:#DA6A12;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0D1012;--surface:#171B1E;--ink:#EEF1F3;--muted:#B3BBC3;--faint:#8D97A0;--rule:#323A40;--accent:#FF6E5B;--on-ink:#101315;--ink-btn:#EEF1F3;--warn:#FF8A80;
+  --d27:#CDB57B;--d28:#2CC475;--d29:#3CC2F0;--d30:#FF9C4D;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+#gate{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+#gate[hidden]{display:none}
+.card{width:100%;max-width:400px;background:var(--surface);border-radius:20px;padding:28px 22px 24px;box-shadow:0 1px 2px rgba(15,20,25,.05),0 8px 32px rgba(15,20,25,.08)}
+.lines{display:flex;gap:6px;margin-bottom:22px}
+.lines i{flex:1;height:6px;border-radius:3px}
+.lines i:nth-child(1){background:var(--d27)}.lines i:nth-child(2){background:var(--d28)}.lines i:nth-child(3){background:var(--d29)}.lines i:nth-child(4){background:var(--d30)}
+h1{margin:0;font-family:"Dela Gothic One","Hiragino Sans",system-ui,sans-serif;font-weight:400;font-size:28px;letter-spacing:.01em;line-height:1.2}
+.ko{margin:6px 0 0;font-size:14px;color:var(--faint);font-family:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+.lead{margin:18px 0 20px;font-size:15px;line-height:1.7;color:var(--muted)}
+label{display:block;font-size:14px;font-weight:700;margin:0 0 6px}
+.f{margin-bottom:16px}
+input{width:100%;font:inherit;font-size:17px;padding:12px 14px;min-height:50px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);color:var(--ink);outline:none}
+input:focus{border-color:var(--ink)}
+.pw{position:relative}
+.pw input{padding-right:72px}
+.pw button{position:absolute;right:6px;top:6px;bottom:6px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:700;padding:0 10px;border-radius:8px;cursor:pointer}
+.go{width:100%;min-height:52px;border:0;border-radius:14px;background:var(--ink-btn);color:var(--on-ink);font:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:4px}
+.go[disabled]{opacity:.55;cursor:default}
+.err{min-height:1.6em;margin:12px 0 0;font-size:14px;line-height:1.6;color:var(--warn)}
+.note{margin:18px 0 0;padding-top:14px;border-top:1px solid var(--rule);font-size:13px;line-height:1.7;color:var(--faint)}
+#loading{min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:15px}
+#loading[hidden]{display:none}
+.gh-foot{display:flex;justify-content:center;padding:8px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+.gh-foot button{border:0;background:transparent;color:var(--faint);font:inherit;font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:8px 12px}
+</style>
+</head>
+<body>
+<div id="loading">読み込んでいます…</div>
+<div id="gate" hidden>
+  <form class="card" id="login" novalidate>
+    <div class="lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <h1>SEOUL,<br>OUR PICKS</h1>
+    <p class="ko">서울, 우리가 고른 곳</p>
+    <p class="lead">3人の旅のしおりです。自分のIDと、3人で決めた合言葉を入れてください。</p>
+    <div class="f"><label for="uid">ID</label><input id="uid" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" required></div>
+    <div class="f"><label for="pw">合言葉</label><div class="pw"><input id="pw" name="password" type="password" autocomplete="current-password" required><button type="button" id="peek" aria-pressed="false">表示</button></div></div>
+    <button class="go" id="go" type="submit">ひらく</button>
+    <p class="err" id="err" role="alert"></p>
+    <p class="note">一度ひらくと、このブラウザではログインしたままになります。共用の端末では、いちばん下の「ログアウト」を押してください。</p>
+  </form>
+</div>
+<script>
+"use strict";
+/* ---------- settings (all of these are safe to publish) ---------- */
+const CONFIG={
+  url:"https://__SUPABASE_HOST__",
+  anonKey:"__SUPABASE_ANON_KEY__",
+  emailDomain:"__EMAIL_DOMAIN__",   // ID "abc" logs in as abc@<emailDomain>
+  bucket:"trip",
+  file:"app.html"
+};
+const CACHE_KEY="ourpicks.app.v1";
+
+const $=id=>document.getElementById(id);
+const show=which=>{$("loading").hidden=which!=="loading";$("gate").hidden=which!=="gate"};
+let sb=null;
+try{sb=window.supabase.createClient(CONFIG.url,CONFIG.anonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"ourpicks.auth"}})}catch(e){}
+
+/* ---------- login ---------- */
+function friendly(e){
+  const m=String(e&&e.message||e||"");
+  if(!navigator.onLine||/fetch|network|load failed/i.test(m))return"通信できませんでした。電波のいいところで、もう一度試してください。";
+  if(/rate|too many|429/i.test(m))return"続けて間違えたため、しばらく入れません。数分おいてから試してください。";
+  if(/invalid login|credentials|invalid/i.test(m))return"IDか合言葉がちがいます。";
+  return"ひらけませんでした（"+m.slice(0,80)+"）";
+}
+$("peek").addEventListener("click",()=>{const p=$("pw"),on=p.type==="password";p.type=on?"text":"password";$("peek").textContent=on?"隠す":"表示";$("peek").setAttribute("aria-pressed",String(on))});
+$("login").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const id=$("uid").value.trim().toLowerCase(),pw=$("pw").value;
+  $("err").textContent="";
+  if(!/^[a-z0-9._-]{1,32}$/.test(id)){$("err").textContent="IDは半角の英数字で入れてください。";$("uid").focus();return}
+  if(!pw){$("err").textContent="合言葉を入れてください。";$("pw").focus();return}
+  if(!sb){$("err").textContent="読み込みに失敗しました。ページを開き直してください。";return}
+  $("go").disabled=true;$("go").textContent="確認しています…";
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email:id+"@"+CONFIG.emailDomain,password:pw});
+    if(error)throw error;
+    $("pw").value="";
+    await boot(data.session);
+  }catch(e){$("err").textContent=friendly(e)}
+  finally{const g=$("go");if(g){g.disabled=false;g.textContent="ひらく"}}
+});
+
+async function logout(){
+  try{localStorage.removeItem(CACHE_KEY)}catch(e){}
+  try{await sb.auth.signOut()}catch(e){}
+  location.reload();
+}
+
+/* ---------- loading the private app ---------- */
+async function fetchApp(session){
+  const r=await fetch(CONFIG.url+"/storage/v1/object/authenticated/"+CONFIG.bucket+"/"+encodeURIComponent(CONFIG.file),
+    {headers:{Authorization:"Bearer "+session.access_token,apikey:CONFIG.anonKey},cache:"no-store"});
+  if(r.status===400||r.status===403||r.status===404){const e=new Error("forbidden");e.forbidden=true;throw e}
+  if(!r.ok)throw new Error("storage "+r.status);
+  return r.text();
+}
+async function loadMember(uid){
+  const{data,error}=await sb.from("members").select("name,role").eq("user_id",uid).maybeSingle();
+  if(error)throw error;
+  return data;
+}
+async function boot(session){
+  show("loading");
+  const uid=session.user.id;
+  let html=null,member=null;
+  try{
+    [member,html]=await Promise.all([loadMember(uid),fetchApp(session)]);
+    if(!member){const e=new Error("forbidden");e.forbidden=true;throw e}
+    try{localStorage.setItem(CACHE_KEY,JSON.stringify({uid,member,html}))}catch(e){}
+  }catch(e){
+    if(e&&e.forbidden){await sb.auth.signOut().catch(()=>{});show("gate");$("err").textContent="このIDはまだ旅のメンバーに登録されていません。";return}
+    // offline: fall back to the copy saved on this phone last time
+    let c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY))}catch(_){}
+    if(c&&c.uid===uid&&c.html){html=c.html;member=c.member}
+    else{show("gate");$("err").textContent=friendly(e);return}
+  }
+  window.claude=makeRuntime(session,member);
+  mount(html);
+}
+
+/* Put the app's head (fonts, styles) and body into this page, then run its script. */
+function mount(html){
+  const doc=new DOMParser().parseFromString(html,"text/html");
+  const t=doc.querySelector("title");if(t)document.title=t.textContent;
+  doc.head.querySelectorAll("link[rel=stylesheet],link[rel=preconnect],style").forEach(n=>document.head.appendChild(document.importNode(n,true)));
+  const scripts=[...doc.querySelectorAll("script")].map(s=>s.textContent);
+  doc.querySelectorAll("script").forEach(s=>s.remove());
+  $("loading").remove();$("gate").remove();
+  [...doc.body.childNodes].forEach(n=>document.body.appendChild(document.importNode(n,true)));
+  const foot=document.createElement("div");foot.className="gh-foot";
+  foot.innerHTML='<button type="button">ログアウト</button>';foot.firstChild.addEventListener("click",logout);
+  document.body.appendChild(foot);
+  scripts.forEach(code=>{const s=document.createElement("script");s.textContent=code;document.body.appendChild(s)});
+}
+
+/* ---------- the same small API the app uses on claude.ai, backed by Supabase ---------- */
+function makeRuntime(session,member){
+  const uid=session.user.id;
+  const codeOf=e=>{const m=String(e&&e.message||"");
+    if(!navigator.onLine||/fetch|network|load failed/i.test(m))return"unavailable";
+    if(e&&(e.code==="42501"||/row-level security|permission/i.test(m)))return"permission_denied";
+    return(e&&e.code)||"unknown"};
+  const fail=e=>{const x=new Error(String(e&&e.message||e));x.code=codeOf(e);return x};
+  const run=async q=>{const{data,error}=await q;if(error)throw fail(error);return data};
+
+  const subs={answers:new Set(),decisions:new Set(),edits:new Set()};
+  const timers={};
+  async function refresh(which){
+    try{
+      if(which==="answers"){
+        const rows=await run(sb.from("answers").select("user_id,data"));
+        const snap={docs:rows.map(r=>({id:r.user_id,exists:true,data:()=>r.data})),metadata:{fromCache:false}};
+        subs.answers.forEach(s=>s.next(snap));
+      }else{
+        const rows=await run(sb.from("plan").select("data").eq("key",which));
+        const r=rows[0];const snap={exists:!!r,data:()=>r?r.data:undefined};
+        subs[which].forEach(s=>s.next(snap));
+      }
+    }catch(e){subs[which].forEach(s=>s.error&&s.error(e))}
+  }
+  const soon=which=>{clearTimeout(timers[which]);timers[which]=setTimeout(()=>refresh(which),250)};
+  const all=()=>Object.keys(subs).forEach(k=>subs[k].size&&soon(k));
+
+  let channel=null;
+  function live(){
+    if(channel)return;
+    channel=sb.channel("ourpicks")
+      .on("postgres_changes",{event:"*",schema:"public",table:"answers"},()=>soon("answers"))
+      .on("postgres_changes",{event:"*",schema:"public",table:"plan"},p=>{const k=(p.new&&p.new.key)||(p.old&&p.old.key);k&&subs[k]?soon(k):(soon("decisions"),soon("edits"))})
+      .subscribe();
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")all()});
+    window.addEventListener("online",all);
+    setInterval(()=>{if(document.visibilityState==="visible")all()},60000);
+  }
+  function listen(which,next,error){
+    const s={next,error};subs[which].add(s);live();refresh(which);
+    return()=>subs[which].delete(s);
+  }
+  const target=path=>{
+    const[col,id]=String(path).split("/");
+    if(col==="answers")return{col,id};
+    if(col==="plan"&&(id==="decisions"||id==="edits"))return{col,id};
+    throw Object.assign(new Error("unknown path "+path),{code:"invalid_argument"});
+  };
+  const db={
+    collection(name){
+      if(name!=="answers")throw Object.assign(new Error("unknown collection"),{code:"invalid_argument"});
+      return{onSnapshot:(next,error)=>listen("answers",next,error)};
+    },
+    doc(path){
+      const t=target(path);
+      return{
+        async set(body){
+          if(t.col==="answers"){
+            if(t.id!==uid)throw Object.assign(new Error("own row only"),{code:"permission_denied"});
+            await run(sb.from("answers").upsert({user_id:uid,data:body},{onConflict:"user_id"}));soon("answers");
+          }else{
+            await run(sb.from("plan").upsert({key:t.id,data:body},{onConflict:"key"}));soon(t.id);
+          }
+        },
+        async delete(){
+          if(t.col==="answers"){await run(sb.from("answers").delete().eq("user_id",uid));soon("answers")}
+          else{await run(sb.from("plan").delete().eq("key",t.id));soon(t.id)}
+        },
+        onSnapshot(next,error){
+          if(t.col!=="plan")throw Object.assign(new Error("unsupported"),{code:"invalid_argument"});
+          return listen(t.id,next,error);
+        }
+      };
+    }
+  };
+  const user={id:async()=>uid,can:async()=>true,isOwner:async()=>member&&member.role==="owner",name:async()=>member&&member.name};
+  const downloads={async save({filename,data,mimeType}){
+    const blob=data instanceof Blob?data:new Blob([data],{type:mimeType||"text/html;charset=utf-8"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename||"download";
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+  }};
+  const api={db,user,downloads};
+  return{use:async name=>{if(!api[name])throw new Error("unavailable");return api[name]}};
+}
+
+/* ---------- start ---------- */
+(async()=>{
+  if(!sb){show("gate");$("err").textContent="読み込みに失敗しました。電波のいいところで開き直してください。";return}
+  const{data}=await sb.auth.getSession().catch(()=>({data:{}}));
+  if(data&&data.session){await boot(data.session);return}
+  // offline and the login could not be refreshed: open the copy saved on this phone (read only)
+  let c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY))}catch(e){}
+  if(!navigator.onLine&&c&&c.html){window.claude=makeRuntime({user:{id:c.uid}},c.member);mount(c.html);return}
+  show("gate");$("uid").focus()
+})();
+</script>
+</body>
+</html>
