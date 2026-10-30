@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#F2F4F6">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://__SUPABASE_HOST__ wss://__SUPABASE_HOST__; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://axkakgzobvzmkortsixb.supabase.co wss://axkakgzobvzmkortsixb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>OUR PICKS</title>
 <!--
   This page is only a lock screen. The trip itself (schedule, places, hotel) is NOT in this repository:
@@ -68,9 +68,9 @@ input:focus{border-color:var(--ink)}
 "use strict";
 /* ---------- settings (all of these are safe to publish) ---------- */
 const CONFIG={
-  url:"https://__SUPABASE_HOST__",
-  anonKey:"__SUPABASE_ANON_KEY__",
-  emailDomain:"__EMAIL_DOMAIN__",   // ID "abc" logs in as abc@<emailDomain>
+  url:"https://axkakgzobvzmkortsixb.supabase.co",
+  anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4a2FrZ3pvYnZ6bWtvcnRzaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyOTY0MjMsImV4cCI6MjEwODg3MjQyM30.3imRvT2Vv_eAoZG2Kx4g6g3VtFwltKAZt2ixt1vKfx8",
+  emailDomain:"trip.example",   // ID "abc" logs in as abc@<emailDomain>
   bucket:"trip",
   file:"app.html"
 };

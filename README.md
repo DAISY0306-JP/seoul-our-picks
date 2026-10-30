@@ -21,20 +21,20 @@ index.html ─ ログイン ──▶ Auth（3人だけ・新規登録は止め�
 
 ## はじめての設定（1回だけ）
 
-### 1. Supabase
+### 1. Supabase（プロジェクト `SEOUL_OUR_PICKS`）
 
-1. この旅行用に、新しいプロジェクトを作ります。
-2. **SQL Editor** で `supabase/setup.sql` を全部貼り付けて実行します。テーブル・RLS・`trip` バケットができます。
-3. **Authentication → Sign In / Providers**
+テーブル・RLS・`trip` バケットは作成済みです（`supabase/setup.sql` と同じ内容）。残りはダッシュボードで行います。
+
+1. **Authentication → Sign In / Providers**
    - 「Allow new users to sign up」を **オフ**にします（知らない人がアカウントを作れないようにするため）。
    - Email の「Minimum password length」を **12以上**にします。
-4. **Authentication → Users → Add user → Create new user** で3人分作ります。
-   - Email：`<ID>@<index.html の emailDomain>`（例：`daisy@trip.example`）
+2. **Authentication → Users → Add user → Create new user** で3人分作ります。
+   - Email：`<ID>@trip.example`（例：`daisy@trip.example`）
    - Password：3人で決めた合言葉（3人とも同じ）
    - 「Auto Confirm User」を **オン**にします。
    - もしメールアドレスが無効と言われたら、本物のメールアドレスで作ってください。その場合は、ログイン画面のIDの欄にメールアドレスをそのまま入れればログインできます。
-5. `supabase/members.sql` のメールアドレスと名前を書きかえて、SQL Editor で実行します。いちばん下の確認で3行出れば完了です。
-6. **Storage → trip** に `app.html`（別に渡すファイル）をアップロードします。
+3. `supabase/members.sql` のメールアドレスと名前を書きかえて、SQL Editor で実行します。いちばん下の確認で3行出れば完了です。
+4. **Storage → trip** に `app.html`（別に渡すファイル）をアップロードします。
 
 ### 2. GitHub Pages
 
