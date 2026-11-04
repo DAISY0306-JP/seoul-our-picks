@@ -262,17 +262,22 @@ function makeRuntime(session,member){
   return{use:async name=>{if(!api[name])throw new Error("unavailable");return api[name]}};
 }
 
+/* ---------- offline: keep this page, the trip file and the library on the phone ---------- */
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+
 /* ---------- start ---------- */
 (async()=>{
   // QR login: index.html#k=<passphrase>. The part after # never reaches GitHub; remove it from the address bar and history at once.
   const qk=new URLSearchParams(location.hash.slice(1)).get("k");
   if(location.hash)history.replaceState(null,"",location.pathname+location.search);
   if(!sb){show("gate");$("err").textContent="読み込みに失敗しました。電波のいいところで開き直してください。";return}
-  const{data}=await sb.auth.getSession().catch(()=>({data:{}}));
-  if(data&&data.session){await boot(data.session);return}
-  // offline and the login could not be refreshed: open the copy saved on this phone (read only)
+  const r=await sb.auth.getSession().catch(e=>({data:{},error:e}));
+  if(r.data&&r.data.session){await boot(r.data.session);return}
+  // No signal and the login could not be refreshed: open the copy saved on this phone.
+  // (Logging out deletes that copy, so this only happens on a phone that was logged in.)
   let c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY))}catch(e){}
-  if(!navigator.onLine&&c&&c.html){window.claude=makeRuntime(null,c.member);mount(c.html);return}
+  const netErr=!navigator.onLine||/fetch|network|load failed|timed? ?out/i.test(String(r.error&&r.error.message||""));
+  if(c&&c.html&&netErr){window.claude=makeRuntime(null,c.member);mount(c.html);return}
   show("gate");
   if(qk){$("pw").value=qk;$("login").requestSubmit();return}
   $("pw").focus()
