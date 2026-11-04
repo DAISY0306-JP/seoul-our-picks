@@ -6,13 +6,12 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#F2F4F6">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://axkakgzobvzmkortsixb.supabase.co wss://axkakgzobvzmkortsixb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://axkakgzobvzmkortsixb.supabase.co wss://axkakgzobvzmkortsixb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>OUR PICKS</title>
 <!--
-  This page is only a lock screen. The trip itself (schedule, places, hotel) is NOT in this repository:
-  it is stored as app.html in a private Supabase Storage bucket and is only downloaded after one of the
-  three members logs in with their ID and the shared passphrase. Row level security on Supabase decides
-  who can read it; the anon key below is meant to be public.
+  This page is only a lock screen. The trip itself (schedule, places, hotel) is in app.enc, encrypted
+  with AES-256-GCM. The key is stored in Supabase and row level security hands it out only after logging
+  in with the shared passphrase. The anon key below is meant to be public.
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
@@ -56,8 +55,8 @@ input:focus{border-color:var(--ink)}
     <div class="lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <h1>SEOUL,<br>OUR PICKS</h1>
     <p class="ko">서울, 우리가 고른 곳</p>
-    <p class="lead">3人の旅のしおりです。自分のIDと、3人で決めた合言葉を入れてください。</p>
-    <div class="f"><label for="uid">ID</label><input id="uid" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" required></div>
+    <p class="lead">3人の旅のしおりです。3人で決めた合言葉を入れてください。</p>
+    <input type="hidden" name="username" autocomplete="username" value="trip">
     <div class="f"><label for="pw">合言葉</label><div class="pw"><input id="pw" name="password" type="password" autocomplete="current-password" required><button type="button" id="peek" aria-pressed="false">表示</button></div></div>
     <button class="go" id="go" type="submit">ひらく</button>
     <p class="err" id="err" role="alert"></p>
@@ -70,10 +69,10 @@ input:focus{border-color:var(--ink)}
 const CONFIG={
   url:"https://axkakgzobvzmkortsixb.supabase.co",
   anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4a2FrZ3pvYnZ6bWtvcnRzaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyOTY0MjMsImV4cCI6MjEwODg3MjQyM30.3imRvT2Vv_eAoZG2Kx4g6g3VtFwltKAZt2ixt1vKfx8",
-  emailDomain:"trip.example",   // ID "abc" logs in as abc@<emailDomain>
-  bucket:"trip",
-  file:"app.html"
+  email:"trip@trip.example",    // the one shared account; its password is the passphrase
+  file:"app.enc"                // the trip, encrypted; the key comes from Supabase after login
 };
+const PERSON_KEY="ourpicks.person"; // which phone this is (kept on logout so your picks stay yours)
 const CACHE_KEY="ourpicks.app.v1";
 
 const $=id=>document.getElementById(id);
@@ -86,20 +85,19 @@ function friendly(e){
   const m=String(e&&e.message||e||"");
   if(!navigator.onLine||/fetch|network|load failed/i.test(m))return"通信できませんでした。電波のいいところで、もう一度試してください。";
   if(/rate|too many|429/i.test(m))return"続けて間違えたため、しばらく入れません。数分おいてから試してください。";
-  if(/invalid login|credentials|invalid/i.test(m))return"IDか合言葉がちがいます。";
+  if(/invalid login|credentials|invalid/i.test(m))return"合言葉がちがいます。";
   return"ひらけませんでした（"+m.slice(0,80)+"）";
 }
 $("peek").addEventListener("click",()=>{const p=$("pw"),on=p.type==="password";p.type=on?"text":"password";$("peek").textContent=on?"隠す":"表示";$("peek").setAttribute("aria-pressed",String(on))});
 $("login").addEventListener("submit",async ev=>{
   ev.preventDefault();
-  const id=$("uid").value.trim().toLowerCase(),pw=$("pw").value;
+  const pw=$("pw").value;
   $("err").textContent="";
-  if(!/^[a-z0-9._-]{1,32}$/.test(id)){$("err").textContent="IDは半角の英数字で入れてください。";$("uid").focus();return}
   if(!pw){$("err").textContent="合言葉を入れてください。";$("pw").focus();return}
   if(!sb){$("err").textContent="読み込みに失敗しました。ページを開き直してください。";return}
   $("go").disabled=true;$("go").textContent="確認しています…";
   try{
-    const{data,error}=await sb.auth.signInWithPassword({email:id+"@"+CONFIG.emailDomain,password:pw});
+    const{data,error}=await sb.auth.signInWithPassword({email:CONFIG.email,password:pw});
     if(error)throw error;
     $("pw").value="";
     await boot(data.session);
@@ -114,12 +112,17 @@ async function logout(){
 }
 
 /* ---------- loading the private app ---------- */
-async function fetchApp(session){
-  const r=await fetch(CONFIG.url+"/storage/v1/object/authenticated/"+CONFIG.bucket+"/"+encodeURIComponent(CONFIG.file),
-    {headers:{Authorization:"Bearer "+session.access_token,apikey:CONFIG.anonKey},cache:"no-store"});
-  if(r.status===400||r.status===403||r.status===404){const e=new Error("forbidden");e.forbidden=true;throw e}
-  if(!r.ok)throw new Error("storage "+r.status);
-  return r.text();
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function fetchApp(){
+  const[keyRow,enc]=await Promise.all([
+    sb.from("app_key").select("k").eq("id",1).maybeSingle(),
+    fetch(CONFIG.file,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("app.enc "+r.status);return r.json()})
+  ]);
+  if(keyRow.error)throw keyRow.error;
+  if(!keyRow.data){const e=new Error("forbidden");e.forbidden=true;throw e}
+  const key=await crypto.subtle.importKey("raw",b64(keyRow.data.k),"AES-GCM",false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(enc.iv)},key,b64(enc.ct));
+  return new TextDecoder().decode(pt);
 }
 async function loadMember(uid){
   const{data,error}=await sb.from("members").select("name,role").eq("user_id",uid).maybeSingle();
@@ -131,11 +134,11 @@ async function boot(session){
   const uid=session.user.id;
   let html=null,member=null;
   try{
-    [member,html]=await Promise.all([loadMember(uid),fetchApp(session)]);
+    [member,html]=await Promise.all([loadMember(uid),fetchApp()]);
     if(!member){const e=new Error("forbidden");e.forbidden=true;throw e}
     try{localStorage.setItem(CACHE_KEY,JSON.stringify({uid,member,html}))}catch(e){}
   }catch(e){
-    if(e&&e.forbidden){await sb.auth.signOut().catch(()=>{});show("gate");$("err").textContent="このIDはまだ旅のメンバーに登録されていません。";return}
+    if(e&&e.forbidden){await sb.auth.signOut().catch(()=>{});show("gate");$("err").textContent="合言葉は合っていますが、まだ準備が終わっていません。少しおいてから試してください。";return}
     // offline: fall back to the copy saved on this phone last time
     let c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY))}catch(_){}
     if(c&&c.uid===uid&&c.html){html=c.html;member=c.member}
@@ -161,8 +164,16 @@ function mount(html){
 }
 
 /* ---------- the same small API the app uses on claude.ai, backed by Supabase ---------- */
+function personId(){
+  let id=null;try{id=localStorage.getItem(PERSON_KEY)}catch(e){}
+  if(!id||!/^[A-Za-z0-9-]{8,64}$/.test(id)){
+    id=(crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""));
+    try{localStorage.setItem(PERSON_KEY,id)}catch(e){}
+  }
+  return id;
+}
 function makeRuntime(session,member){
-  const uid=session.user.id;
+  const uid=personId();
   const codeOf=e=>{const m=String(e&&e.message||"");
     if(!navigator.onLine||/fetch|network|load failed/i.test(m))return"unavailable";
     if(e&&(e.code==="42501"||/row-level security|permission/i.test(m)))return"permission_denied";
@@ -175,8 +186,8 @@ function makeRuntime(session,member){
   async function refresh(which){
     try{
       if(which==="answers"){
-        const rows=await run(sb.from("answers").select("user_id,data"));
-        const snap={docs:rows.map(r=>({id:r.user_id,exists:true,data:()=>r.data})),metadata:{fromCache:false}};
+        const rows=await run(sb.from("picks").select("id,data"));
+        const snap={docs:rows.map(r=>({id:r.id,exists:true,data:()=>r.data})),metadata:{fromCache:false}};
         subs.answers.forEach(s=>s.next(snap));
       }else{
         const rows=await run(sb.from("plan").select("data").eq("key",which));
@@ -192,7 +203,7 @@ function makeRuntime(session,member){
   function live(){
     if(channel)return;
     channel=sb.channel("ourpicks")
-      .on("postgres_changes",{event:"*",schema:"public",table:"answers"},()=>soon("answers"))
+      .on("postgres_changes",{event:"*",schema:"public",table:"picks"},()=>soon("answers"))
       .on("postgres_changes",{event:"*",schema:"public",table:"plan"},p=>{const k=(p.new&&p.new.key)||(p.old&&p.old.key);k&&subs[k]?soon(k):(soon("decisions"),soon("edits"))})
       .subscribe();
     document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")all()});
@@ -220,13 +231,13 @@ function makeRuntime(session,member){
         async set(body){
           if(t.col==="answers"){
             if(t.id!==uid)throw Object.assign(new Error("own row only"),{code:"permission_denied"});
-            await run(sb.from("answers").upsert({user_id:uid,data:body},{onConflict:"user_id"}));soon("answers");
+            await run(sb.from("picks").upsert({id:uid,data:body},{onConflict:"id"}));soon("answers");
           }else{
             await run(sb.from("plan").upsert({key:t.id,data:body},{onConflict:"key"}));soon(t.id);
           }
         },
         async delete(){
-          if(t.col==="answers"){await run(sb.from("answers").delete().eq("user_id",uid));soon("answers")}
+          if(t.col==="answers"){await run(sb.from("picks").delete().eq("id",uid));soon("answers")}
           else{await run(sb.from("plan").delete().eq("key",t.id));soon(t.id)}
         },
         onSnapshot(next,error){
@@ -248,18 +259,18 @@ function makeRuntime(session,member){
 
 /* ---------- start ---------- */
 (async()=>{
-  // QR login: index.html#i=<ID>&k=<passphrase>. The part after # never reaches GitHub; remove it from the address bar and history at once.
-  const hp=new URLSearchParams(location.hash.slice(1)),qi=hp.get("i"),qk=hp.get("k");
+  // QR login: index.html#k=<passphrase>. The part after # never reaches GitHub; remove it from the address bar and history at once.
+  const qk=new URLSearchParams(location.hash.slice(1)).get("k");
   if(location.hash)history.replaceState(null,"",location.pathname+location.search);
   if(!sb){show("gate");$("err").textContent="読み込みに失敗しました。電波のいいところで開き直してください。";return}
   const{data}=await sb.auth.getSession().catch(()=>({data:{}}));
   if(data&&data.session){await boot(data.session);return}
   // offline and the login could not be refreshed: open the copy saved on this phone (read only)
   let c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY))}catch(e){}
-  if(!navigator.onLine&&c&&c.html){window.claude=makeRuntime({user:{id:c.uid}},c.member);mount(c.html);return}
+  if(!navigator.onLine&&c&&c.html){window.claude=makeRuntime(null,c.member);mount(c.html);return}
   show("gate");
-  if(qi&&qk){$("uid").value=qi;$("pw").value=qk;$("login").requestSubmit();return}
-  $("uid").focus()
+  if(qk){$("pw").value=qk;$("login").requestSubmit();return}
+  $("pw").focus()
 })();
 </script>
 </body>

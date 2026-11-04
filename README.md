@@ -1,70 +1,48 @@
 # SEOUL, OUR PICKS
 
-3人で使うソウル旅行（2026年11月）のしおりアプリです。
-
-このリポジトリにあるのは**ログイン画面だけ**です。旅程・ホテル・お店などの中身は入っていません。中身は Supabase の非公開ストレージ（`trip` バケットの `app.html`）にあります。登録された3人が、自分のIDと合言葉でログインしたときだけ読み込まれます。
+3人で使うソウル旅行（2026年11月）のしおりアプリです。合言葉1つでログインします。
 
 ## しくみ
 
 ```
-GitHub Pages（公開）            Supabase（非公開）
-index.html ─ ログイン ──▶ Auth（3人だけ・新規登録は止める）
-             │
-             ├─ app.html を読む ──▶ Storage「trip」（メンバーだけ読める）
-             └─ ♡・投票・決定 ───▶ answers / plan テーブル（RLSで3人だけ）
+GitHub Pages（公開）                 Supabase（非公開）
+index.html ─ 合言葉でログイン ──▶ Auth（共有アカウント1つ）
+   │                                   │
+   ├─ app.enc（暗号化した旅程）◀── 鍵 ─┘ app_key（ログインした人だけ読める）
+   └─ ♡・投票・決定 ──────────────▶ picks / plan テーブル
 ```
 
-- `index.html` に書く Supabase の URL と anon key は、公開しても大丈夫な値です。読み書きできるかどうかは、Supabase の行レベルセキュリティ（RLS）が決めます。
-- `members` テーブルに入っている人しか、何も読めません。ログインできるアカウントがあっても同じです。
-- 自分の回答は本人しか書き換えられません。決定と旅程の編集は owner だけができます。
-- 一度ひらいた旅程は、その端末に保存されます。電波がないときは、保存したものを読み取り専用で開きます。ログアウトすると消えます。
+- 旅程（ホテル・予定・お店）は `app.enc` に **AES-256 で暗号化**して置いています。鍵は Supabase にあり、合言葉でログインしたときだけ渡されます。リポジトリを公開しても、中身は読めません。
+- `index.html` にある Supabase の URL と anon key は、公開して大丈夫な値です。
+- ♡・投票・ニックネームはスマホごとに保存されます。ログアウトしても、そのスマホの♡は自分のものとして残ります。
+- 一度ひらいた旅程はそのスマホに保存されるので、電波がないときも見られます。ログアウトすると消えます。
 
-## はじめての設定（1回だけ）
+## はじめての設定
 
-### 1. Supabase（プロジェクト `SEOUL_OUR_PICKS`）
+1. **Supabase → Authentication → Users → Add user → Create new user**
+   - Email：`trip@trip.example`
+   - Password：3人で決めた合言葉（12文字以上がおすすめ）
+   - 「Auto Confirm User」を **オン**
+   - 作った瞬間に、自動でメンバーに登録されます。
+2. **GitHub → Settings → General** でリポジトリを **Public** にして、**Settings → Pages** で Branch を `main` / `(root)` にします。
 
-テーブル・RLS・`trip` バケットは作成済みです（`supabase/setup.sql` と同じ内容）。残りはダッシュボードで行います。
+## QRで渡す
 
-1. **Authentication → Sign In / Providers**
-   - 「Allow new users to sign up」を **オフ**にします（知らない人がアカウントを作れないようにするため）。
-   - Email の「Minimum password length」を **12以上**にします。
-2. **Authentication → Users → Add user → Create new user** で3人分作ります。
-   - Email：`<ID>@trip.example`（例：`daisy@trip.example`）
-   - Password：3人で決めた合言葉（3人とも同じ）
-   - 「Auto Confirm User」を **オン**にします。
-   - もしメールアドレスが無効と言われたら、本物のメールアドレスで作ってください。その場合は、ログイン画面のIDの欄にメールアドレスをそのまま入れればログインできます。
-3. `supabase/members.sql` のメールアドレスと名前を書きかえて、SQL Editor で実行します。いちばん下の確認で3行出れば完了です。
-4. **Storage → trip** に `app.html`（別に渡すファイル）をアップロードします。
+`https://<ユーザー名>.github.io/seoul-our-picks/qr.html` で合言葉を入れると、読み取るだけでログインできるQRが出ます。
 
-### 2. GitHub Pages
-
-**Settings → Pages → Build and deployment** で、Source を「Deploy from a branch」、Branch を `main` と `/ (root)` にします。
-数分すると `https://<ユーザー名>.github.io/<リポジトリ名>/` で開けるようになります。
-
-## QRでログインしてもらう
-
-`https://<ユーザー名>.github.io/<リポジトリ名>/qr.html` を開き、3人のIDと合言葉を入れると、1人ずつログイン用のQRが出ます。
-
-- QRの中身は `index.html#i=<ID>&k=<合言葉>` です。`#` から後ろはGitHubに送られません。ログイン画面は読み取った直後に、アドレスバーと履歴からこの部分を消します。
-- `qr.html` は通信を一切しない設定（CSP の `connect-src 'none'`）で、入力も保存しません。別のアプリに切り替えたり画面を消したりすると、QRも消えます。
-- **QRは鍵そのもの**です。会ったときに画面を見せて読み取ってもらい、スクリーンショットや画像の送信はしないでください。
-- 1回ログインすれば、そのブラウザではログインしたままになります。iPhoneでホーム画面に追加した場合は、そこでもう一度読み取ってください。
-
-## 旅程を更新するとき
-
-Supabase の **Storage → trip** で、`app.html` を新しいものに置きかえます。GitHub 側の変更はいりません。次にアプリを開いたときに反映されます。
+- QRを作るページは通信を一切しない設定で、入力も保存しません。
+- QRで開いたあと、合言葉はアドレスバーと履歴からすぐ消えます。
+- **QRは鍵そのもの**です。画面を見せて読み取ってもらい、スクリーンショットや画像の送信はしないでください。
 
 ## 合言葉を変えたいとき
 
-**Authentication → Users** で3人それぞれのパスワードを変えます。すでにログインしている端末は、そのままログインした状態が続きます。全員を締め出したいときは、ユーザーを削除して作り直してください。
+**Authentication → Users** で `trip@trip.example` のパスワードを変えます。
 
 ## ファイル
 
 | ファイル | 中身 |
 |---|---|
 | `index.html` | ログイン画面と、Supabase とのやりとり |
+| `app.enc` | 暗号化した旅程 |
 | `qr.html` | ログイン用QRを、ブラウザの中だけで作るページ |
-| `supabase/setup.sql` | テーブル・RLS・ストレージの設定 |
-| `supabase/members.sql` | 3人をメンバーに登録する SQL のひな形 |
-
-`app.html`（旅程の中身）は `.gitignore` に入れてあり、このリポジトリには入れません。
+| `supabase/setup.sql` | テーブル・RLS の設定（適用済み） |

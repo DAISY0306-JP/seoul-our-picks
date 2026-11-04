@@ -20,7 +20,6 @@ p{font-size:14.5px;line-height:1.7;color:var(--muted);margin:0 0 14px}
 .card{background:var(--surface);border-radius:18px;padding:18px;box-shadow:0 1px 2px rgba(15,20,25,.05),0 6px 24px rgba(15,20,25,.06)}
 label{display:block;font-size:13.5px;font-weight:700;margin:12px 0 6px}
 input{width:100%;font:inherit;font-size:16px;padding:11px 12px;min-height:46px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink)}
-.ids{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 button{font:inherit;cursor:pointer}
 .go{width:100%;min-height:50px;margin-top:16px;border:0;border-radius:12px;background:var(--ink);color:var(--bg);font-size:16px;font-weight:700}
 .err{color:var(--warn);font-size:14px;min-height:1.4em;margin:10px 0 0}
@@ -40,22 +39,19 @@ button{font:inherit;cursor:pointer}
 <main>
   <div id="form">
     <h1>ログイン用のQRを作る</h1>
-    <p>ID と合言葉を入れると、読み取るだけでログインできるQRを1人ずつ表示します。このページは何も送信せず、保存もしません。</p>
+    <p>合言葉を入れると、読み取るだけでログインできるQRを表示します。このページは何も送信せず、保存もしません。</p>
     <form class="card" id="f" autocomplete="off">
-      <label>3人のID</label>
-      <div class="ids"><input id="i1" aria-label="ID 1人目" autocapitalize="none" spellcheck="false"><input id="i2" aria-label="ID 2人目" autocapitalize="none" spellcheck="false"><input id="i3" aria-label="ID 3人目" autocapitalize="none" spellcheck="false"></div>
-      <label for="k">合言葉</label>
+      <label for="k" style="margin-top:0">合言葉</label>
       <input id="k" type="password" autocomplete="off">
       <button class="go" type="submit">QRを表示する</button>
       <p class="err" id="err" role="alert"></p>
     </form>
   </div>
   <div id="show" hidden>
-    <p class="who" id="who"></p>
-    <p class="step" id="step"></p>
+    <p class="who">カメラで読み取ってください</p>
+    <p class="step">2人とも読み取ったら「終わる」を押します</p>
     <div class="qr" id="qr"></div>
-    <div class="row"><button type="button" id="prev">前の人</button><button type="button" class="main" id="next">次の人</button></div>
-    <div class="row"><button type="button" id="done">終わる（消す）</button></div>
+    <div class="row"><button type="button" class="main" id="done">終わる（消す）</button></div>
     <p class="note">本人のスマホのカメラで読み取ってもらい、開いたらそのブラウザで使い続けてもらいます。iPhoneでホーム画面に追加した場合は、そこでもう一度読み取ってください。<br>スクリーンショットは撮らない・送らないでください。</p>
   </div>
 </main>
@@ -63,32 +59,22 @@ button{font:inherit;cursor:pointer}
 "use strict";
 const $=id=>document.getElementById(id);
 const base=new URL("./",location.href).href;
-let list=[],key="",at=0;
+let key="";
 function draw(){
-  const id=list[at];
-  $("who").textContent=id+" さん用";
-  $("step").textContent=(at+1)+" / "+list.length;
   const q=qrcode(0,"M");
-  q.addData(base+"#i="+encodeURIComponent(id)+"&k="+encodeURIComponent(key),"Byte");
+  q.addData(base+"#k="+encodeURIComponent(key),"Byte");
   q.make();
   $("qr").innerHTML=q.createImgTag(8,0);
-  $("prev").disabled=at===0;
-  $("next").textContent=at===list.length-1?"最初に戻る":"次の人";
 }
 $("f").addEventListener("submit",e=>{
   e.preventDefault();
-  list=["i1","i2","i3"].map(x=>$(x).value.trim().toLowerCase()).filter(Boolean);
   key=$("k").value;
-  if(!list.length){$("err").textContent="IDを1つ以上入れてください";return}
-  if(list.some(x=>!/^[a-z0-9._@+-]{1,64}$/.test(x))){$("err").textContent="IDは半角の英数字で入れてください";return}
   if(key.length<12){$("err").textContent="合言葉は12文字以上にしてください";return}
   if(typeof qrcode!=="function"){$("err").textContent="QRの部品を読み込めませんでした。開き直してください";return}
-  $("k").value="";["i1","i2","i3"].forEach(x=>$(x).value="");
-  at=0;$("form").hidden=true;$("show").hidden=false;draw();
+  $("k").value="";
+  $("form").hidden=true;$("show").hidden=false;draw();
 });
-$("prev").addEventListener("click",()=>{if(at>0){at--;draw()}});
-$("next").addEventListener("click",()=>{at=(at+1)%list.length;draw()});
-function wipe(){list=[];key="";$("qr").innerHTML="";$("show").hidden=true;$("form").hidden=false;$("err").textContent=""}
+function wipe(){key="";$("qr").innerHTML="";$("show").hidden=true;$("form").hidden=false;$("err").textContent=""}
 $("done").addEventListener("click",wipe);
 // Leaving the page or switching apps clears the QR.
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&key)wipe()});

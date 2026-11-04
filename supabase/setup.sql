@@ -96,3 +96,51 @@ values ('trip', 'trip', false, 2097152, array['text/html']);
 create policy "trip: members can read" on storage.objects
   for select to authenticated
   using (bucket_id = 'trip' and (select private.is_member()));
+
+-- ---------------------------------------------------------------------------
+-- Change: one shared login instead of one account per person (applied as migration "shared_login").
+-- The tables "answers" and the bucket "trip" above are no longer used (left empty in the live project).
+-- ---------------------------------------------------------------------------
+
+-- picks: one row per phone (wishes, votes, nickname), keyed by an id the phone makes for itself.
+create table public.picks (
+  id         text primary key check (id ~ '^[A-Za-z0-9-]{8,64}$'),
+  data       jsonb not null check (pg_column_size(data) < 64000),
+  updated_at timestamptz not null default now()
+);
+alter table public.picks enable row level security;
+revoke all on public.picks from anon, authenticated;
+grant select, insert, update, delete on public.picks to authenticated;
+create policy "picks: members read"   on public.picks for select to authenticated using ((select private.is_member()));
+create policy "picks: members insert" on public.picks for insert to authenticated with check ((select private.is_member()));
+create policy "picks: members update" on public.picks for update to authenticated using ((select private.is_member())) with check ((select private.is_member()));
+create policy "picks: members delete" on public.picks for delete to authenticated using ((select private.is_member()));
+create trigger picks_touch before insert or update on public.picks
+  for each row execute function private.touch_updated_at();
+alter publication supabase_realtime add table public.picks;
+
+-- app_key: the AES key that unlocks app.enc (the encrypted trip in this repository). Members only.
+-- The key itself is inserted separately and is not in this repository.
+create table public.app_key (
+  id smallint primary key default 1 check (id = 1),
+  k  text not null
+);
+alter table public.app_key enable row level security;
+revoke all on public.app_key from anon, authenticated;
+grant select on public.app_key to authenticated;
+create policy "app_key: members read" on public.app_key for select to authenticated using ((select private.is_member()));
+
+-- The shared account (trip@trip.example) becomes a member as soon as it is created with Auto Confirm.
+create function private.add_trip_member()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if lower(new.email) = 'trip@trip.example' and new.email_confirmed_at is not null then
+    insert into public.members (user_id, name, role) values (new.id, '3人', 'owner')
+    on conflict (user_id) do nothing;
+  end if;
+  return new;
+end; $$;
+revoke all on function private.add_trip_member() from public, anon, authenticated;
+create trigger on_trip_user
+  after insert or update of email_confirmed_at on auth.users
+  for each row execute function private.add_trip_member();
