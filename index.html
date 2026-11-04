@@ -8,6 +8,11 @@
 <meta name="theme-color" content="#F2F4F6">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://axkakgzobvzmkortsixb.supabase.co wss://axkakgzobvzmkortsixb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>OUR PICKS</title>
+<!-- Home screen: opens in the normal browser so the login is shared with Safari / Chrome (and QR login keeps working). -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="OUR PICKS">
 <!--
   This page is only a lock screen. The trip itself (schedule, places, hotel) is in app.enc, encrypted
   with AES-256-GCM. The key is stored in Supabase and row level security hands it out only after logging

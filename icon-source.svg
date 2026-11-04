@@ -1,0 +1,8 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+ <rect width="1024" height="1024" fill="#0F1419"/>
+ <text x="512" y="560" text-anchor="middle" font-family="Noto Sans CJK KR" font-weight="900" font-size="360" fill="#fff" letter-spacing="-10">서울</text>
+ <g transform="translate(212 690)">
+  <rect width="134" height="44" rx="22" fill="#CDB57B"/><rect x="155" width="134" height="44" rx="22" fill="#2CC475"/>
+  <rect x="310" width="134" height="44" rx="22" fill="#3CC2F0"/><rect x="465" width="134" height="44" rx="22" fill="#FF9C4D"/>
+ </g>
+</svg>
