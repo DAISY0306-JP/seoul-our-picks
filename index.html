@@ -19,54 +19,72 @@
   in with the shared passphrase. The anon key below is meant to be public.
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <style>
-:root{--bg:#F2F4F6;--surface:#FFFFFF;--ink:#0F1419;--muted:#4A545E;--faint:#77818B;--rule:#DCE2E7;--accent:#E04532;--on-ink:#FFFFFF;--ink-btn:#0F1419;--warn:#B3261E;
-  --d27:#957C3C;--d28:#00994A;--d29:#0090C4;--d30:#DA6A12;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0D1012;--surface:#171B1E;--ink:#EEF1F3;--muted:#B3BBC3;--faint:#8D97A0;--rule:#323A40;--accent:#FF6E5B;--on-ink:#101315;--ink-btn:#EEF1F3;--warn:#FF8A80;
-  --d27:#CDB57B;--d28:#2CC475;--d29:#3CC2F0;--d30:#FF9C4D;color-scheme:dark}}
+/* Same look as the app: header bar, day-colour line, white cards. */
+:root{--bg:#F2F4F6;--surface:#FFFFFF;--surface-2:#EDF0F3;--ink:#0F1419;--muted:#4A545E;--faint:#77818B;--rule:#DCE2E7;--hair:#EBEEF1;
+  --accent:#E04532;--ink-btn:#0F1419;--on-ink:#FFFFFF;--d27:#957C3C;--d28:#00994A;--d29:#0090C4;--d30:#DA6A12;
+  --shadow:0 1px 2px rgba(15,20,25,.05),0 4px 16px rgba(15,20,25,.05);--card-line:transparent;--r:16px;
+  --font-sign:"Black Han Sans","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --font-body:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  --font-ko:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0D1012;--surface:#171B1E;--surface-2:#22272B;--ink:#EEF1F3;--muted:#B3BBC3;--faint:#8D97A0;--rule:#323A40;--hair:#262C31;
+  --accent:#FF6E5B;--ink-btn:#EEF1F3;--on-ink:#101315;--d27:#CDB57B;--d28:#2CC475;--d29:#3CC2F0;--d30:#FF9C4D;--shadow:none;--card-line:#262C31;color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;-webkit-text-size-adjust:100%}
-#gate{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
-#gate[hidden]{display:none}
-.card{width:100%;max-width:400px;background:var(--surface);border-radius:20px;padding:28px 22px 24px;box-shadow:0 1px 2px rgba(15,20,25,.05),0 8px 32px rgba(15,20,25,.08)}
-.lines{display:flex;gap:6px;margin-bottom:22px}
-.lines i{flex:1;height:6px;border-radius:3px}
-.lines i:nth-child(1){background:var(--d27)}.lines i:nth-child(2){background:var(--d28)}.lines i:nth-child(3){background:var(--d29)}.lines i:nth-child(4){background:var(--d30)}
-h1{margin:0;font-family:"Dela Gothic One","Hiragino Sans",system-ui,sans-serif;font-weight:400;font-size:28px;letter-spacing:.01em;line-height:1.2}
-.ko{margin:6px 0 0;font-size:14px;color:var(--faint);font-family:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
-.lead{margin:18px 0 20px;font-size:15px;line-height:1.7;color:var(--muted)}
-label{display:block;font-size:14px;font-weight:700;margin:0 0 6px}
-.f{margin-bottom:16px}
-input{width:100%;font:inherit;font-size:17px;padding:12px 14px;min-height:50px;border:1.5px solid var(--rule);border-radius:12px;background:var(--bg);color:var(--ink);outline:none}
-input:focus{border-color:var(--ink)}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.7;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased;min-height:100vh;min-height:100dvh}
+.top{background:var(--surface);border-bottom:1px solid var(--hair);padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
+.top .in,.wrap{max-width:440px;margin:0 auto}
+.top h1{margin:0;font-family:var(--font-sign);font-weight:400;font-size:22px;letter-spacing:.03em;line-height:1.1}
+.top .ko{margin:4px 0 0;font-family:var(--font-ko);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.wrap{padding:22px 16px calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+.line{position:relative;display:grid;grid-template-columns:repeat(4,1fr);padding:2px 0}
+.line::before{content:"";position:absolute;left:12.5%;right:12.5%;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:var(--rule)}
+.line i{position:relative;justify-self:center;width:40px;height:40px;border-radius:50%;border:4px solid var(--c);background:var(--surface)}
+.line i:nth-child(1){--c:var(--d27)}.line i:nth-child(2){--c:var(--d28)}.line i:nth-child(3){--c:var(--d29)}.line i:nth-child(4){--c:var(--d30)}
+.line i.on{background:var(--c);transform:scale(1.08);box-shadow:0 4px 12px color-mix(in srgb,var(--c) 35%,transparent)}
+.box{background:var(--surface);border:1px solid var(--card-line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 18px 18px;display:flex;flex-direction:column;gap:14px}
+.box h2{margin:0;font-size:18px;line-height:1.4}
+.lead{margin:-6px 0 0;font-size:14.5px;line-height:1.7;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13.5px;font-weight:700;color:var(--muted)}
 .pw{position:relative}
-.pw input{padding-right:72px}
+.pw input{width:100%;font:inherit;font-size:17px;border:1.5px solid transparent;background:var(--surface-2);color:var(--ink);border-radius:12px;padding:11px 74px 11px 14px;min-height:50px;outline:none}
+.pw input:focus{border-color:var(--ink);background:var(--surface)}
 .pw button{position:absolute;right:6px;top:6px;bottom:6px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:700;padding:0 10px;border-radius:8px;cursor:pointer}
-.go{width:100%;min-height:52px;border:0;border-radius:14px;background:var(--ink-btn);color:var(--on-ink);font:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:4px}
-.go[disabled]{opacity:.55;cursor:default}
-.err{min-height:1.6em;margin:12px 0 0;font-size:14px;line-height:1.6;color:var(--warn)}
-.note{margin:18px 0 0;padding-top:14px;border-top:1px solid var(--rule);font-size:13px;line-height:1.7;color:var(--faint)}
-#loading{min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:15px}
-#loading[hidden]{display:none}
+.go{width:100%;min-height:50px;border:0;border-radius:12px;background:var(--ink-btn);color:var(--on-ink);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.go[disabled]{opacity:.5;cursor:default}
+.err{min-height:1.5em;margin:-4px 0 0;font-size:14px;font-weight:700;line-height:1.6;color:var(--accent)}
+.err:empty{display:none}
+.note{margin:0;font-size:13px;line-height:1.7;color:var(--faint)}
+#gate[hidden],#loading[hidden]{display:none}
+#loading{text-align:center;color:var(--faint);font-size:14.5px;padding-top:8px}
+</style>
+<style id="keep">
 .gh-foot{display:flex;justify-content:center;padding:8px 16px calc(96px + env(safe-area-inset-bottom,0px))}
 .gh-foot button{border:0;background:transparent;color:var(--faint);font:inherit;font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:8px 12px}
 </style>
 </head>
 <body>
-<div id="loading">読み込んでいます…</div>
-<div id="gate" hidden>
-  <form class="card" id="login" novalidate>
-    <div class="lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-    <h1>SEOUL,<br>OUR PICKS</h1>
-    <p class="ko">서울, 우리가 고른 곳</p>
-    <p class="lead">3人の旅のしおりです。3人で決めた合言葉を入れてください。</p>
-    <input type="hidden" name="username" autocomplete="username" value="trip">
-    <div class="f"><label for="pw">合言葉</label><div class="pw"><input id="pw" name="password" type="password" autocomplete="current-password" required><button type="button" id="peek" aria-pressed="false">表示</button></div></div>
-    <button class="go" id="go" type="submit">ひらく</button>
-    <p class="err" id="err" role="alert"></p>
-    <p class="note">一度ひらくと、このブラウザではログインしたままになります。共用の端末では、いちばん下の「ログアウト」を押してください。</p>
-  </form>
+<div id="shell">
+<header class="top"><div class="in"><h1>SEOUL, OUR PICKS</h1><p class="ko">서울, 우리가 고른 곳</p></div></header>
+<div class="wrap">
+  <div class="line" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+  <p id="loading">読み込んでいます…</p>
+  <div id="gate" hidden>
+    <form class="box" id="login" novalidate>
+      <h2>合言葉を入れてください</h2>
+      <p class="lead">3人の旅のしおりです。3人で決めた合言葉で開きます。</p>
+      <input type="hidden" name="username" autocomplete="username" value="trip">
+      <div class="field"><label for="pw">合言葉</label><div class="pw"><input id="pw" name="password" type="password" autocomplete="current-password" required><button type="button" id="peek" aria-pressed="false">表示</button></div></div>
+      <p class="err" id="err" role="alert"></p>
+      <button class="go" id="go" type="submit">ひらく</button>
+      <p class="note">一度ひらくと、このブラウザではログインしたままになります。共用の端末では、いちばん下の「ログアウト」を押してください。</p>
+    </form>
+  </div>
+</div>
 </div>
 <script>
 "use strict";
@@ -157,10 +175,11 @@ async function boot(session){
 function mount(html){
   const doc=new DOMParser().parseFromString(html,"text/html");
   const t=doc.querySelector("title");if(t)document.title=t.textContent;
+  document.head.querySelectorAll("style:not(#keep)").forEach(n=>n.remove());
   doc.head.querySelectorAll("link[rel=stylesheet],link[rel=preconnect],style").forEach(n=>document.head.appendChild(document.importNode(n,true)));
   const scripts=[...doc.querySelectorAll("script")].map(s=>s.textContent);
   doc.querySelectorAll("script").forEach(s=>s.remove());
-  $("loading").remove();$("gate").remove();
+  $("shell").remove();
   [...doc.body.childNodes].forEach(n=>document.body.appendChild(document.importNode(n,true)));
   const foot=document.createElement("div");foot.className="gh-foot";
   foot.innerHTML='<button type="button">ログアウト</button>';foot.firstChild.addEventListener("click",logout);
