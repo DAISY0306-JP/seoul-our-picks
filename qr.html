@@ -6,53 +6,76 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <!-- connect-src 'none': this page cannot send anything anywhere. The QR is drawn inside the browser. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>QR</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <style>
-:root{--bg:#F2F4F6;--surface:#fff;--ink:#0F1419;--muted:#4A545E;--faint:#77818B;--rule:#DCE2E7;--warn:#985600;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0D1012;--surface:#171B1E;--ink:#EEF1F3;--muted:#B3BBC3;--faint:#8D97A0;--rule:#323A40;--warn:#F2B04C;color-scheme:dark}}
+/* Same look as the app and the lock screen. */
+:root{--bg:#F2F4F6;--surface:#FFFFFF;--surface-2:#EDF0F3;--ink:#0F1419;--muted:#4A545E;--faint:#77818B;--rule:#DCE2E7;--hair:#EBEEF1;
+  --accent:#E04532;--ink-btn:#0F1419;--on-ink:#FFFFFF;--d27:#957C3C;--d28:#00994A;--d29:#0090C4;--d30:#DA6A12;
+  --shadow:0 1px 2px rgba(15,20,25,.05),0 4px 16px rgba(15,20,25,.05);--card-line:transparent;--r:16px;
+  --font-sign:"Black Han Sans","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --font-body:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+  --font-ko:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0D1012;--surface:#171B1E;--surface-2:#22272B;--ink:#EEF1F3;--muted:#B3BBC3;--faint:#8D97A0;--rule:#323A40;--hair:#262C31;
+  --accent:#FF6E5B;--ink-btn:#EEF1F3;--on-ink:#101315;--d27:#CDB57B;--d28:#2CC475;--d29:#3CC2F0;--d30:#FF9C4D;--shadow:none;--card-line:#262C31;color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;-webkit-text-size-adjust:100%}
-main{max-width:440px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px))}
-h1{font-size:20px;margin:4px 0 6px}
-p{font-size:14.5px;line-height:1.7;color:var(--muted);margin:0 0 14px}
-.card{background:var(--surface);border-radius:18px;padding:18px;box-shadow:0 1px 2px rgba(15,20,25,.05),0 6px 24px rgba(15,20,25,.06)}
-label{display:block;font-size:13.5px;font-weight:700;margin:12px 0 6px}
-input{width:100%;font:inherit;font-size:16px;padding:11px 12px;min-height:46px;border:1.5px solid var(--rule);border-radius:10px;background:var(--bg);color:var(--ink)}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.7;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
 button{font:inherit;cursor:pointer}
-.go{width:100%;min-height:50px;margin-top:16px;border:0;border-radius:12px;background:var(--ink);color:var(--bg);font-size:16px;font-weight:700}
-.err{color:var(--warn);font-size:14px;min-height:1.4em;margin:10px 0 0}
+.top{background:var(--surface);border-bottom:1px solid var(--hair);padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
+.top .in,main{max-width:440px;margin:0 auto}
+.top h1{margin:0;font-family:var(--font-sign);font-weight:400;font-size:22px;letter-spacing:.03em;line-height:1.1}
+.top .ko{margin:4px 0 0;font-family:var(--font-ko);font-size:12px;font-weight:600;color:var(--muted)}
+main{padding:22px 16px calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+.line{position:relative;display:grid;grid-template-columns:repeat(4,1fr);padding:2px 0}
+.line::before{content:"";position:absolute;left:12.5%;right:12.5%;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:var(--rule)}
+.line i{position:relative;justify-self:center;width:40px;height:40px;border-radius:50%;border:4px solid var(--c);background:var(--surface)}
+.line i:nth-child(1){--c:var(--d27)}.line i:nth-child(2){--c:var(--d28)}.line i:nth-child(3){--c:var(--d29)}.line i:nth-child(4){--c:var(--d30)}
+.line i.on{background:var(--c);transform:scale(1.08)}
+.box{background:var(--surface);border:1px solid var(--card-line);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 18px 18px;display:flex;flex-direction:column;gap:14px}
+.box h2{margin:0;font-size:18px;line-height:1.4}
+.lead{margin:-6px 0 0;font-size:14.5px;line-height:1.7;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13.5px;font-weight:700;color:var(--muted)}
+.field input{width:100%;font:inherit;font-size:17px;border:1.5px solid transparent;background:var(--surface-2);color:var(--ink);border-radius:12px;padding:11px 14px;min-height:50px;outline:none}
+.field input:focus{border-color:var(--ink);background:var(--surface)}
+.go,.row .main{width:100%;min-height:50px;border:0;border-radius:12px;background:var(--ink-btn);color:var(--on-ink);font-size:15px;font-weight:700}
+.err{margin:-4px 0 0;font-size:14px;font-weight:700;line-height:1.6;color:var(--accent)}
+.err:empty{display:none}
+.warn{margin:-4px 0 0;font-size:13.5px;line-height:1.6;color:var(--muted)}
+.warn:empty{display:none}
 #show[hidden],#form[hidden]{display:none}
-#show{text-align:center}
-.who{font-size:24px;font-weight:700;margin:0 0 4px}
-.step{font-size:14px;color:var(--faint);margin:0 0 14px}
-.qr{background:#fff;border-radius:16px;padding:14px;display:inline-block;line-height:0}
-.qr img{width:min(78vw,330px);height:auto;image-rendering:pixelated}
-.row{display:flex;gap:8px;margin-top:16px}
-.row button{flex:1;min-height:50px;border-radius:12px;border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);font-weight:700;font-size:15.5px}
-.row .main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.note{font-size:13px;color:var(--faint);margin-top:16px;line-height:1.7;text-align:left}
+#show{align-items:center;text-align:center}
+.who{font-size:18px;font-weight:700;margin:0}
+.step{font-size:14px;color:var(--faint);margin:-8px 0 0}
+.qr{background:#fff;border-radius:12px;padding:14px;display:inline-block;line-height:0;align-self:center}
+.qr img{width:min(70vw,300px);height:auto;image-rendering:pixelated}
+.row{display:flex;gap:8px;width:100%}
+.note{font-size:13px;color:var(--faint);line-height:1.7;text-align:left;margin:0}
 </style>
 </head>
 <body>
+<header class="top"><div class="in"><h1>SEOUL, OUR PICKS</h1><p class="ko">서울, 우리가 고른 곳</p></div></header>
 <main>
+  <div class="line" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
   <div id="form">
-    <h1>ログイン用のQRを作る</h1>
-    <p>合言葉を入れると、読み取るだけでログインできるQRを表示します。このページは何も送信せず、保存もしません。</p>
-    <form class="card" id="f" autocomplete="off">
-      <label for="k" style="margin-top:0">合言葉</label>
-      <input id="k" type="password" autocomplete="off">
-      <button class="go" type="submit">QRを表示する</button>
+    <form class="box" id="f" autocomplete="off">
+      <h2>ログイン用のQRを作る</h2>
+      <p class="lead">合言葉を入れると、読み取るだけでログインできるQRが出ます。このページは何も送信せず、保存もしません。</p>
+      <div class="field"><label for="k">合言葉</label><input id="k" type="password" autocomplete="off"></div>
       <p class="err" id="err" role="alert"></p>
+      <button class="go" type="submit">QRを表示する</button>
     </form>
   </div>
-  <div id="show" hidden>
+  <div id="show" class="box" hidden>
     <p class="who">カメラで読み取ってください</p>
     <p class="step">2人とも読み取ったら「終わる」を押します</p>
     <div class="qr" id="qr"></div>
-    <div class="row"><button type="button" class="main" id="done">終わる（消す）</button></div>
-    <p class="note">本人のスマホのカメラで読み取ってもらい、開いたらそのブラウザで使い続けてもらいます。開いたページを共有ボタンから「ホーム画面に追加」すると、アプリのように開けます。<br>スクリーンショットは撮らない・送らないでください。</p>
+    <p class="warn" id="warn"></p>
+    <div class="row"><button type="button" class="main" id="done">終わる（QRを消す）</button></div>
+    <p class="note">本人のスマホのカメラで読み取ってもらい、開いたらそのブラウザで使い続けてもらいます。共有ボタンから「ホーム画面に追加」すると、アプリのように開けます。<br>スクリーンショットは撮らない・送らないでください。</p>
   </div>
 </main>
 <script>
@@ -69,12 +92,13 @@ function draw(){
 $("f").addEventListener("submit",e=>{
   e.preventDefault();
   key=$("k").value;
-  if(key.length<12){$("err").textContent="合言葉は12文字以上にしてください";return}
+  if(!key){$("err").textContent="合言葉を入れてください";return}
+  $("warn").textContent=key.length<12?"合言葉が短めです。QRを見せるのは会ったときだけにしてください。":"";
   if(typeof qrcode!=="function"){$("err").textContent="QRの部品を読み込めませんでした。開き直してください";return}
   $("k").value="";
-  $("form").hidden=true;$("show").hidden=false;draw();
+  $("form").hidden=true;$("show").hidden=false;$("show").style.display="flex";draw();
 });
-function wipe(){key="";$("qr").innerHTML="";$("show").hidden=true;$("form").hidden=false;$("err").textContent=""}
+function wipe(){key="";$("qr").innerHTML="";$("show").hidden=true;$("show").style.display="";$("form").hidden=false;$("err").textContent=""}
 $("done").addEventListener("click",wipe);
 // Leaving the page or switching apps clears the QR.
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&key)wipe()});
