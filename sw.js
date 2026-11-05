@@ -1,7 +1,7 @@
 // Keeps the lock screen, the encrypted trip (app.enc), the Supabase library, icons and fonts on the phone,
 // so the app still opens with no signal. Supabase API calls are never cached.
-const CACHE = "ourpicks-v1";
-const SHELL = ["./", "index.html", "qr.html", "app.enc", "manifest.webmanifest",
+const CACHE = "ourpicks-v2";
+const SHELL = ["./", "index.html", "app.enc", "manifest.webmanifest",
   "apple-touch-icon.png", "icon-192.png", "icon-512.png", "favicon-32.png"];
 const LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
 

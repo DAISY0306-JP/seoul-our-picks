@@ -286,8 +286,7 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
 
 /* ---------- start ---------- */
 (async()=>{
-  // QR login: index.html#k=<passphrase>. The part after # never reaches GitHub; remove it from the address bar and history at once.
-  const qk=new URLSearchParams(location.hash.slice(1)).get("k");
+  // Old QR links carried the passphrase after #; never keep it in the address bar or history.
   if(location.hash)history.replaceState(null,"",location.pathname+location.search);
   if(!sb){show("gate");$("err").textContent="読み込みに失敗しました。電波のいいところで開き直してください。";return}
   const r=await sb.auth.getSession().catch(e=>({data:{},error:e}));
@@ -298,7 +297,6 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
   const netErr=!navigator.onLine||/fetch|network|load failed|timed? ?out/i.test(String(r.error&&r.error.message||""));
   if(c&&c.html&&netErr){window.claude=makeRuntime(null,c.member);mount(c.html);return}
   show("gate");
-  if(qk){$("pw").value=qk;$("login").requestSubmit();return}
   $("pw").focus()
 })();
 </script>
